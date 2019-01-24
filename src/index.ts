@@ -1,9 +1,30 @@
 import _ from 'lodash';
+import Phaser from 'phaser';
+import MainScene from './MainScene';
 
-const component = () => {
-    const p = document.createElement('p');
-    p.innerHTML = 'Hello world ' + _.concat([1,2], [3,4,5]);
-    return p;
+class TestGame extends Phaser.Game {
+    constructor() {
+        super({
+            type: Phaser.AUTO,
+            width: 800,
+            height: 600,
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 200 },
+                },
+            },
+            scene: [
+                MainScene,
+            ],
+        });
+    }
+
+    preload() {
+        this.boot;
+    }
 }
 
-document.body.appendChild(component());
+window.onload = () => {
+    const game = new TestGame();
+}
