@@ -11,6 +11,8 @@ export default class MainScene extends Phaser.Scene {
     rectWidth = 100;
     computerIcon: Phaser.Physics.Arcade.Sprite;
     monsters: Phaser.Physics.Arcade.Sprite[] = [];
+    obstacleLayer: any;
+    gunCooldown = 0;
 
     constructor() {
         super({
@@ -41,11 +43,11 @@ export default class MainScene extends Phaser.Scene {
         const map = this.make.tilemap({ key: 'map', tileWidth: 16, tileHeight: 16 });
         const backgroundMap = this.make.tilemap({ key: 'backgroundMap', tileWidth: 16, tileHeight: 16 });
         const tileset = map.addTilesetImage(null, 'tiles', 16, 16, 1, 2);
-        const layer = map.createStaticLayer(0, tileset, 0, 0);
+        this.obstacleLayer = map.createStaticLayer(0, tileset, 0, 0);
         const backgroundLayer = backgroundMap.createStaticLayer(0, tileset, 0, 0);
         backgroundLayer.setDepth(-1);
-        layer.setCollisionByExclusion([-1], true);
-        layer.setDepth(1);
+        this.obstacleLayer.setCollisionByExclusion([-1], true);
+        this.obstacleLayer.setDepth(1);
         // const group = this.physics.add.staticGroup();
         this.player = this.physics.add.sprite(200, 300, 'player').setScale(2);
         this.player.setDepth(1);
@@ -84,7 +86,7 @@ export default class MainScene extends Phaser.Scene {
             }, 500);
             return true;
         });
-        this.physics.add.collider(this.monsters[0], layer);
+        this.physics.add.collider(this.monsters[0], this.obstacleLayer);
         // this.physics.add.collider(this.player, this.monsters[0], () => {
         //     this.player.setTint(0xee0000);
         //     setTimeout(() => {
@@ -104,7 +106,7 @@ export default class MainScene extends Phaser.Scene {
             this.computerIcon = this.physics.add.sprite(0, 0, 'computer').setScale(0.03).setPosition(worldPoint.x, worldPoint.y);
             this.computerIcon.setDepth(100);
         });
-        this.physics.add.collider(this.player, layer);
+        this.physics.add.collider(this.player, this.obstacleLayer);
         // const computer = this.add.image(400, 300, 'computer');
         const particles = this.add.particles('particle').setDepth(30);
         const emitter = particles.createEmitter({
@@ -180,11 +182,26 @@ export default class MainScene extends Phaser.Scene {
                 this.player.setVelocity(0);
                 this.player.anims.play('idle', true);
             }
-            if (this.cursors.space.isDown) {
+            if (this.cursors.space.isDown && this.gunCooldown <= 0) {
+                this.gunCooldown = 500;
                 const playerX = this.player.body.x;
                 const playerY = this.player.body.y;
-                const bullet = this.physics.add.sprite(playerX, playerY, 'particle').setDepth(20);
+                const bullet = this.physics.add.sprite(playerX, playerY+20, 'particle').setDepth(20);
+                bullet.setScale(0.1);
                 bullet.setVelocityX(this.isPlayerFlipped ? -400 : 400);
+                this.physics.add.collider(bullet, this.obstacleLayer, () => {
+                    bullet.setPosition(-1000, -1100);
+                    bullet.setVelocity(0, 0);
+                })
+                this.physics.add.collider(bullet, this.monsters[0], () => {
+                    this.monsters[0].setPosition(1000, 1000);
+                    bullet.setPosition(-1000, -1100);
+                    bullet.setVelocity(0, 0);
+                });
+            }
+            if (this.gunCooldown > 0) {
+                this.gunCooldown -= delta;
+                console.log(this.gunCooldown);
             }
             this.player.body.velocity.normalize().scale(SPEED)
         }
