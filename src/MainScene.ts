@@ -68,7 +68,13 @@ export default class MainScene extends Phaser.Scene {
             repeat: -1,
         });
         this.monsters[0].anims.play('monster_idle', true);
-        this.physics.add.collider(this.player, this.monsters[0]);
+        this.physics.add.collider(this.player, this.monsters[0], () => {
+            this.player.setTint(0xee0000);
+            setTimeout(() => {
+                this.player.setTint(0xffffff);
+            }, 500);
+            return true;
+        });
         this.physics.add.collider(this.monsters[0], layer);
         // this.physics.add.collider(this.player, this.monsters[0], () => {
         //     this.player.setTint(0xee0000);
