@@ -26,9 +26,8 @@ export default class MainScene extends Phaser.Scene {
     create() {
         this.cursors = this.input.keyboard.createCursorKeys();
         const map = this.make.tilemap({ key: 'map', tileWidth: 8, tileHeight: 8 });
-        const tileset = map.addTilesetImage('tiles');
+        const tileset = map.addTilesetImage(null, 'tiles', 8, 8, 1, 2);
         const layer = map.createStaticLayer(0, tileset, 0, 0);
-        layer.setScale(10);
         // layer.setScale(10);
         layer.setCollisionByExclusion([], true);
         // const group = this.physics.add.staticGroup();
@@ -37,13 +36,13 @@ export default class MainScene extends Phaser.Scene {
         // this.physics.add.collider(this.player, group);
         this.physics.add.collider(this.player, layer);
         // const computer = this.add.image(400, 300, 'computer');
-        // const particles = this.add.particles('particle');
-        // const emitter = particles.createEmitter({
-        //     speed: 50,
-        //     scale: { start: 0.5, end: 0 },
-        //     blendMode: Phaser.BlendModes.ADD,
-        // });
-        // emitter.startFollow(this.player);
+        const particles = this.add.particles('particle');
+        const emitter = particles.createEmitter({
+            speed: 50,
+            scale: { start: 0.5, end: 0 },
+            blendMode: Phaser.BlendModes.ADD,
+        });
+        emitter.startFollow(this.player);
         const camera = this.cameras.main;
         camera.startFollow(this.player);
     }
