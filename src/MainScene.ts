@@ -5,6 +5,7 @@ const SPEED = 200;
 export default class MainScene extends Phaser.Scene {
     player: Phaser.Physics.Arcade.Sprite;
     playerHealth = 5;
+    isPlayerFlipped = false;
     cursors: Phaser.Input.Keyboard.CursorKeys;
     rect: Phaser.GameObjects.Graphics;
     rectWidth = 100;
@@ -72,6 +73,9 @@ export default class MainScene extends Phaser.Scene {
         this.physics.add.collider(this.player, this.monsters[0], () => {
             this.player.setTint(0xee0000);
             this.playerHealth--;
+            if (this.playerHealth === 0) {
+                this.player.destroy();
+            }
             const playerX = this.player.body.x;
             const playerY = this.player.body.y;
             this.player.setRandomPosition(playerX-100, playerY-100, 200, 200);
@@ -120,6 +124,9 @@ export default class MainScene extends Phaser.Scene {
 
     update(time, delta) {
         // monsters
+        if (this.playerHealth === 0) {
+            return;
+        }
         const xVelocity = this.player.body.x - this.monsters[0].body.x;
         const yVelocity = this.player.body.y - this.monsters[0].body.y;
         const distance = Math.sqrt(Math.pow(xVelocity, 2) + Math.pow(yVelocity, 2));
@@ -148,29 +155,39 @@ export default class MainScene extends Phaser.Scene {
         // this.rect.strokeRect(100, 300, this.rectWidth, 60);
 
         // player movement
-        if (this.cursors.left.isDown) {
-            this.player.setVelocityX(-SPEED);
-            this.player.anims.play('walk', true);
-            this.player.setFlipX(true);
+        if (this.playerHealth > 0) {
+            if (this.cursors.left.isDown) {
+                this.player.setVelocityX(-SPEED);
+                this.player.anims.play('walk', true);
+                this.player.setFlipX(true);
+                this.isPlayerFlipped = true;
+            }
+            if (this.cursors.right.isDown) {
+                this.player.setVelocityX(SPEED);
+                this.player.anims.play('walk', true);
+                this.player.setFlipX(false);
+                this.isPlayerFlipped = false;
+            }
+            if (this.cursors.up.isDown) {
+                this.player.setVelocityY(-SPEED);
+                this.player.anims.play('walk', true);
+            }
+            if (this.cursors.down.isDown) {
+                this.player.setVelocityY(SPEED);
+                this.player.anims.play('walk', true);
+            }
+            if (this.noCursorIsDown(this.cursors)) {
+                this.player.setVelocity(0);
+                this.player.anims.play('idle', true);
+            }
+            if (this.cursors.space.isDown) {
+                const playerX = this.player.body.x;
+                const playerY = this.player.body.y;
+                const bullet = this.physics.add.sprite(playerX, playerY, 'particle').setDepth(20);
+                bullet.setVelocityX(this.isPlayerFlipped ? -400 : 400);
+            }
+            this.player.body.velocity.normalize().scale(SPEED)
         }
-        if (this.cursors.right.isDown) {
-            this.player.setVelocityX(SPEED);
-            this.player.anims.play('walk', true);
-            this.player.setFlipX(false);
-        }
-        if (this.cursors.up.isDown) {
-            this.player.setVelocityY(-SPEED);
-            this.player.anims.play('walk', true);
-        }
-        if (this.cursors.down.isDown) {
-            this.player.setVelocityY(SPEED);
-            this.player.anims.play('walk', true);
-        }
-        if (this.noCursorIsDown(this.cursors)) {
-            this.player.setVelocity(0);
-            this.player.anims.play('idle', true);
-        }
-        this.player.body.velocity.normalize().scale(SPEED)
     }
 
     noCursorIsDown(cursors: Phaser.Input.Keyboard.CursorKeys) {
