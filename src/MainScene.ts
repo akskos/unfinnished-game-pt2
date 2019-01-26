@@ -4,6 +4,7 @@ const SPEED = 200;
 
 export default class MainScene extends Phaser.Scene {
     player: Phaser.Physics.Arcade.Sprite;
+    playerHealth = 5;
     cursors: Phaser.Input.Keyboard.CursorKeys;
     rect: Phaser.GameObjects.Graphics;
     rectWidth = 100;
@@ -70,6 +71,10 @@ export default class MainScene extends Phaser.Scene {
         this.monsters[0].anims.play('monster_idle', true);
         this.physics.add.collider(this.player, this.monsters[0], () => {
             this.player.setTint(0xee0000);
+            this.playerHealth--;
+            const playerX = this.player.body.x;
+            const playerY = this.player.body.y;
+            this.player.setRandomPosition(playerX-100, playerY-100, 200, 200);
             setTimeout(() => {
                 this.player.setTint(0xffffff);
             }, 500);
@@ -136,14 +141,13 @@ export default class MainScene extends Phaser.Scene {
         this.computerIcon && this.computerIcon.setPosition(worldPoint.x, worldPoint.y);
 
         // rect
-        this.rect.clear();
-        this.rect.setDepth(30);
-        this.rect.lineStyle(2, 0xff00ff, 1);
-        this.rectWidth += delta / 10;
-        this.rect.strokeRect(100, 300, this.rectWidth, 60);
+        // this.rect.clear();
+        // this.rect.setDepth(30);
+        // this.rect.lineStyle(2, 0xff00ff, 1);
+        // this.rectWidth += delta / 10;
+        // this.rect.strokeRect(100, 300, this.rectWidth, 60);
 
         // player movement
-        this.player.setVelocity(0);
         if (this.cursors.left.isDown) {
             this.player.setVelocityX(-SPEED);
             this.player.anims.play('walk', true);
