@@ -2181,7 +2181,7 @@ declare type ParticleEmitterConfig = {
     /**
      * Sets {@link Phaser.GameObjects.Particles.ParticleEmitter#blendMode}.
      */
-    blendMode?: integer;
+    blendMode?: integer | string;
     /**
      * Sets {@link Phaser.GameObjects.Particles.ParticleEmitter#deathCallbackScope} and {@link Phaser.GameObjects.Particles.ParticleEmitter#emitCallbackScope}.
      */
