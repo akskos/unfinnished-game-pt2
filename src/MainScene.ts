@@ -19,6 +19,7 @@ export default class MainScene extends Phaser.Scene {
     home: Phaser.GameObjects.Graphics;
     goal: Phaser.GameObjects.Graphics;
     baby: Phaser.GameObjects.Graphics;
+    rain: Phaser.GameObjects.Particles.ParticleEmitter;
 
     constructor() {
         super({
@@ -139,19 +140,19 @@ export default class MainScene extends Phaser.Scene {
         });
         // const computer = this.add.image(400, 300, 'computer');
         const particles = this.add.particles('particle').setDepth(30);
-        const emitter = particles.createEmitter({
+        this.rain = particles.createEmitter({
             speedY: 700,
             scaleX: 0.1,
             scaleY: 0.1,
             timeScale: 0.08,
             blendMode: Phaser.BlendModes.ADD,
-            emitZone: {
-                source: new Phaser.Geom.Line(-100, 0, 1400, 0),
-            },
             maxParticles: 0,
             quantity: 0.4,
             lifespan: 30000,
             alpha: 0.8,
+            emitZone: {
+                source: new Phaser.Geom.Line(-100, 0, 1800, 0),
+            }
         });
         // emitter.startFollow(this.player);
         const camera = this.cameras.main;
