@@ -267,6 +267,7 @@ export default class MainScene extends Phaser.Scene {
                 const playerX = this.player.body.x;
                 const playerY = this.player.body.y;
                 const bullet = this.physics.add.sprite(playerX, playerY+20, 'particle').setDepth(20);
+                bullet.setTint(0xff0000);
                 bullet.setScale(0.1);
                 bullet.setVelocityX(this.isPlayerFlipped ? -400 : 400);
                 this.physics.add.collider(bullet, this.obstacleLayer, () => {
