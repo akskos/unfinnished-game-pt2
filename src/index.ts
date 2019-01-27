@@ -30,5 +30,10 @@ class TestGame extends Phaser.Game {
 }
 
 window.onload = () => {
+    // var el = document.getElementsByTagName('canvas')[0];
+    // var requestFullScreen = el.requestFullscreen;
+    // if(requestFullScreen) {
+    //     requestFullScreen.call(el);
+    // }
     const game = new TestGame();
 }

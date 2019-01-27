@@ -31,8 +31,8 @@ export default class MainScene extends Phaser.Scene {
         this.load.tilemapCSV('sky-and-dune-tilemap', 'sky-and-dune-tilemap.csv');
         this.load.tilemapCSV('obstacle-tilemap', 'obstacle-tilemap.csv');
         this.load.spritesheet('player',
-            'dude.png',
-            { frameWidth: 18, frameHeight: 25 },
+            'player.png',
+            { frameWidth: 64, frameHeight: 118 },
         );
         this.load.spritesheet('monster',
             'monster.png',
@@ -44,22 +44,28 @@ export default class MainScene extends Phaser.Scene {
     }
 
     create() {
+        // document.getElementsByTagName('canvas')[0][this.game.device.fullscreen.request]();
         this.cursors = this.input.keyboard.createCursorKeys();
 
         // Floor layer
         const floorTilemap = this.make.tilemap({ key: 'floor-tilemap', tileWidth: 32, tileHeight: 32 });
         const floorTileset = floorTilemap.addTilesetImage(null, 'desert-tiles'); // TODO: EXTRUDE
         this.floorLayer = floorTilemap.createStaticLayer(0, floorTileset, 0, 0);
+        this.floorLayer.setDepth(0);
 
         // Sky and dune layer
         const skyAndDuneTilemap = this.make.tilemap({ key: 'sky-and-dune-tilemap', tileWidth: 32, tileHeight: 32 });
         const skyAndDuneTileset = floorTilemap.addTilesetImage(null, 'desert-tiles'); // TODO: EXTRUDE
         this.skyAndDuneLayer = skyAndDuneTilemap.createStaticLayer(0, skyAndDuneTileset, 0, 0);
+        this.skyAndDuneLayer.setCollisionByExclusion([-1], true);
+        this.skyAndDuneLayer.setDepth(1);
 
         // Obstacle layer
         const obstacleTilemap = this.make.tilemap({ key: 'obstacle-tilemap', tileWidth: 32, tileHeight: 32 });
         const obstacleTileset = obstacleTilemap.addTilesetImage(null, 'walls-tiles'); // TODO: EXTRUDE
         this.obstacleLayer = obstacleTilemap.createStaticLayer(0, obstacleTileset, 0, 0);
+        this.obstacleLayer.setCollisionByExclusion([-1], true);
+        this.obstacleLayer.setDepth(1);
 
         // const desertTileset = desertTilemap.addTilesetImage(null, 'tiles', 16, 16, 1, 2);
         // this.obstacleLayer = desertTilemap.createStaticLayer(0, desertTileset, 0, 0);
@@ -68,18 +74,20 @@ export default class MainScene extends Phaser.Scene {
         // this.obstacleLayer.setCollisionByExclusion([-1], true);
         // this.obstacleLayer.setDepth(1);
         // const group = this.physics.add.staticGroup();
-        this.player = this.physics.add.sprite(200, 300, 'player').setScale(2);
+        this.player = this.physics.add.sprite(200, 500, 'player').setScale(0.5);
         this.player.setDepth(1);
+        this.physics.add.collider(this.player, this.skyAndDuneLayer);
+        this.physics.add.collider(this.player, this.obstacleLayer);
         this.anims.create({
             key: 'idle',
-            frames: this.anims.generateFrameNumbers('player', { start: 0, end: 3 }),
-            frameRate: 15,
+            frames: this.anims.generateFrameNumbers('player', { start: 0, end: 1 }),
+            frameRate: 5,
             repeat: -1,
         });
         this.anims.create({
             key: 'walk',
-            frames: this.anims.generateFrameNumbers('player', { start: 4, end: 7 }),
-            frameRate: 15,
+            frames: this.anims.generateFrameNumbers('player', { frames: [0, 2, 1, 3] }),
+            frameRate: 11,
             repeat: -1,
         });
         this.player.anims.play('idle', true);
@@ -106,18 +114,6 @@ export default class MainScene extends Phaser.Scene {
             return true;
         });
         this.physics.add.collider(this.monsters[0], this.obstacleLayer);
-        // this.physics.add.collider(this.player, this.monsters[0], () => {
-        //     this.player.setTint(0xee0000);
-        //     setTimeout(() => {
-        //         this.player.setTint(0xffffff);
-        //     }, 500);
-        //     let positionOffsetX = Math.floor(Math.random() * 20) + 80;
-        //     let positionOffsetY = Math.floor(Math.random() * 20) + 80;
-        //     Math.floor(Math.random() * 2) === 0 ? positionOffsetX *= -1 : null;
-        //     Math.floor(Math.random() * 2) === 0 ? positionOffsetY *= -1 : null;
-        //     this.player.setPosition(this.player.body.x + positionOffsetX, this.player.body.y + positionOffsetY);
-        // });
-        // const computer = this.physics.add.sprite(200, 300, 'computer').setScale(1);
         const smallComputer = this.physics.add.sprite(-100, -100, 'computer').setScale(0.05);
         this.physics.add.collider(this.player, smallComputer, (obj1, obj2) => {
             smallComputer.destroy();
@@ -125,7 +121,6 @@ export default class MainScene extends Phaser.Scene {
             this.computerIcon = this.physics.add.sprite(0, 0, 'computer').setScale(0.03).setPosition(worldPoint.x, worldPoint.y);
             this.computerIcon.setDepth(100);
         });
-        this.physics.add.collider(this.player, this.obstacleLayer);
         // const computer = this.add.image(400, 300, 'computer');
         const particles = this.add.particles('particle').setDepth(30);
         const emitter = particles.createEmitter({
@@ -217,9 +212,13 @@ export default class MainScene extends Phaser.Scene {
             }
             if (this.gunCooldown > 0) {
                 this.gunCooldown -= delta;
-                console.log(this.gunCooldown);
             }
             this.player.body.velocity.normalize().scale(SPEED)
+
+            // Exiting fullscreen
+            const esc = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+            if (esc.isDown) {
+            }
         }
     }
 
