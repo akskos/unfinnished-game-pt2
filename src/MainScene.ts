@@ -55,6 +55,10 @@ export default class MainScene extends Phaser.Scene {
             'man-with-baby.png',
             { frameWidth: 49, frameHeight: 118 },
         );
+        this.load.spritesheet('dead',
+            'skullblood.png',
+            { frameWidth: 46, frameHeight: 27 },
+        );
     }
 
     create() {
@@ -139,12 +143,20 @@ export default class MainScene extends Phaser.Scene {
             frameRate: 11,
             repeat: -1,
         });
+        this.anims.create({
+            key: 'player-dead',
+            frames: this.anims.generateFrameNumbers('dead', { start: 0, end: 0 }),
+            frameRate: 1,
+            repeat: -1,
+        })
         this.playPlayerIdleAnimation();
-        this.monsters.push(this.generateMonster());
-        this.monsters.push(this.generateMonster());
-        this.monsters.push(this.generateMonster());
-        this.monsters.push(this.generateMonster());
-        this.monsters.push(this.generateMonster());
+        for (let i = 0; i < 6; i++) {
+            this.monsters.push(this.generateMonster());
+            this.monsters.push(this.generateMonster());
+            this.monsters.push(this.generateMonster());
+            this.monsters.push(this.generateMonster());
+            this.monsters.push(this.generateMonster());
+        }
         const smallComputer = this.physics.add.sprite(-100, -100, 'computer').setScale(0.05);
         this.physics.add.collider(this.player, smallComputer, (obj1, obj2) => {
             smallComputer.destroy();
@@ -247,11 +259,6 @@ export default class MainScene extends Phaser.Scene {
                 this.gunCooldown -= delta;
             }
             this.player.body.velocity.normalize().scale(SPEED)
-
-            // Exiting fullscreen
-            const esc = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
-            if (esc.isDown) {
-            }
         }
     }
 
@@ -294,10 +301,14 @@ export default class MainScene extends Phaser.Scene {
         });
         monster.anims.play('monster_idle', true);
         this.physics.add.collider(this.player, monster, () => {
+            if (this.playerHealth === 0) {
+                return false;
+            }
             this.player.setTint(0xee0000);
             this.playerHealth--;
             if (this.playerHealth === 0) {
-                this.player.destroy();
+                this.player.anims.play('player-dead', true);
+                this.player.setVelocity(0);
             }
             const playerX = this.player.body.x;
             const playerY = this.player.body.y;
@@ -309,6 +320,7 @@ export default class MainScene extends Phaser.Scene {
         });
         this.physics.add.collider(monster, this.baby);
         this.physics.add.collider(monster, this.obstacleLayer);
+        this.physics.add.collider(monster, this.home);
         return monster;
     }
 
@@ -330,7 +342,7 @@ export default class MainScene extends Phaser.Scene {
                 monster.setFlipX(false);
             }
         }
-        if (distanceToPlayer < distanceToBaby) {
+        if (distanceToPlayer < distanceToBaby && this.playerHealth > 0) {
             moveTowardsSprite(this.player);
         } else if (distanceToBaby <= distanceToPlayer) {
             moveTowardsSprite(this.baby);
