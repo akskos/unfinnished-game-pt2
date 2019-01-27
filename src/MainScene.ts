@@ -104,13 +104,7 @@ export default class MainScene extends Phaser.Scene {
         this.goal.setDepth(1);
         this.goal.fillRect(700, 500, 100, 100);
 
-        // const desertTileset = desertTilemap.addTilesetImage(null, 'tiles', 16, 16, 1, 2);
-        // this.obstacleLayer = desertTilemap.createStaticLayer(0, desertTileset, 0, 0);
-        // const wallsLayer = wallsTilemap.createStaticLayer(0, wallsTileset, 0, 0);
-        // backgroundLayer.setDepth(-1);
-        // this.obstacleLayer.setCollisionByExclusion([-1], true);
-        // this.obstacleLayer.setDepth(1);
-        // const group = this.physics.add.staticGroup();
+        // Player
         this.player = this.physics.add.sprite(200, 500, 'player').setScale(0.5);
         this.player.setDepth(3);
         this.physics.add.collider(this.player, this.skyAndDuneLayer);
@@ -140,29 +134,11 @@ export default class MainScene extends Phaser.Scene {
             repeat: -1,
         });
         this.playPlayerIdleAnimation();
-        this.monsters.push(this.physics.add.sprite(0, 300, 'monster').setDepth(1));
-        this.anims.create({
-            key: 'monster_idle',
-            frames: this.anims.generateFrameNumbers('monster', { start: 0, end: 4 }),
-            frameRate: 15,
-            repeat: -1,
-        });
-        this.monsters[0].anims.play('monster_idle', true);
-        this.physics.add.collider(this.player, this.monsters[0], () => {
-            this.player.setTint(0xee0000);
-            this.playerHealth--;
-            if (this.playerHealth === 0) {
-                this.player.destroy();
-            }
-            const playerX = this.player.body.x;
-            const playerY = this.player.body.y;
-            this.player.setRandomPosition(playerX-100, playerY-100, 200, 200);
-            setTimeout(() => {
-                this.player.setTint(0xffffff);
-            }, 500);
-            return true;
-        });
-        this.physics.add.collider(this.monsters[0], this.obstacleLayer);
+        this.monsters.push(this.generateMonster());
+        this.monsters.push(this.generateMonster());
+        this.monsters.push(this.generateMonster());
+        this.monsters.push(this.generateMonster());
+        this.monsters.push(this.generateMonster());
         const smallComputer = this.physics.add.sprite(-100, -100, 'computer').setScale(0.05);
         this.physics.add.collider(this.player, smallComputer, (obj1, obj2) => {
             smallComputer.destroy();
@@ -318,5 +294,34 @@ export default class MainScene extends Phaser.Scene {
         } else {
             this.player.anims.play('idle', true);
         }
+    }
+
+    generateMonster() {
+        const monster = this.physics.add.sprite(200, 800, 'monster').setDepth(2);
+        monster.setRandomPosition(0, 0, 1700, 1700);
+        this.anims.create({
+            key: 'monster_idle',
+            frames: this.anims.generateFrameNumbers('monster', { start: 0, end: 4 }),
+            frameRate: 15,
+            repeat: -1,
+        });
+        monster.anims.play('monster_idle', true);
+        this.physics.add.collider(this.player, monster, () => {
+            this.player.setTint(0xee0000);
+            this.playerHealth--;
+            if (this.playerHealth === 0) {
+                this.player.destroy();
+            }
+            const playerX = this.player.body.x;
+            const playerY = this.player.body.y;
+            this.player.setRandomPosition(playerX-100, playerY-100, 200, 200);
+            setTimeout(() => {
+                this.player.setTint(0xffffff);
+            }, 500);
+            return true;
+        });
+        this.physics.add.collider(monster, this.baby);
+        this.physics.add.collider(monster, this.obstacleLayer);
+        return monster;
     }
 }
