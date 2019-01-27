@@ -97,12 +97,18 @@ export default class MainScene extends Phaser.Scene {
             repeat: -1,
         });
         this.baby.anims.play('baby-idle', true);
+        this.baby.setDrag(100);
 
         // Goal
         this.goal = this.add.graphics(); 
         this.goal.fillStyle(0x00ffff);
         this.goal.setDepth(1);
         this.goal.fillRect(700, 500, 100, 100);
+        this.physics.add.collider(this.baby, this.goal, () => {
+            console.log('OVERLAP');
+            const worldPoint = this.cameras.main.getWorldPoint(200, 200);
+            this.add.text(worldPoint.x, worldPoint.y, 'VICTORY :)', { fontSize: '40px', fill: '#00ff00' }).setDepth(199);
+        });
 
         // Player
         this.player = this.physics.add.sprite(200, 500, 'player').setScale(0.5);
@@ -165,8 +171,6 @@ export default class MainScene extends Phaser.Scene {
         // emitter.startFollow(this.player);
         const camera = this.cameras.main;
         camera.startFollow(this.player);
-
-        this.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' }).setDepth(199);
 
         this.input.keyboard.on('keyup_P', () => {
             console.log('keyup_P');
@@ -231,10 +235,12 @@ export default class MainScene extends Phaser.Scene {
                     bullet.setPosition(-1000, -1100);
                     bullet.setVelocity(0, 0);
                 })
-                this.physics.add.collider(bullet, this.monsters[0], () => {
-                    this.monsters[0].setPosition(1000, 1000);
-                    bullet.setPosition(-1000, -1100);
-                    bullet.setVelocity(0, 0);
+                this.monsters.forEach(monster => {
+                    this.physics.add.collider(bullet, monster, () => {
+                        monster.setPosition(1000, 1000);
+                        bullet.setPosition(-1000, -1100);
+                        bullet.setVelocity(0, 0);
+                    });
                 });
             }
             if (this.gunCooldown > 0) {
@@ -307,9 +313,14 @@ export default class MainScene extends Phaser.Scene {
     }
 
     updateMonster(monster: Phaser.Physics.Arcade.Sprite) {
-        if (this.calculateSpriteDistance(this.player, monster) < 250) {
-            const xVelocity = this.player.body.x - monster.body.x;
-            const yVelocity = this.player.body.y - monster.body.y;
+        const distanceToPlayer = this.calculateSpriteDistance(this.player, monster);
+        const distanceToBaby = this.calculateSpriteDistance(this.baby, monster);
+        if (distanceToPlayer > 250 && distanceToBaby > 250) {
+            return;
+        }
+        const moveTowardsSprite = (sprite: Phaser.Physics.Arcade.Sprite) => {
+            const xVelocity = sprite.body.x - monster.body.x;
+            const yVelocity = sprite.body.y - monster.body.y;
             monster.setVelocityX(xVelocity);
             monster.setVelocityY(yVelocity);
             monster.body.velocity.normalize().scale(100);
@@ -318,6 +329,11 @@ export default class MainScene extends Phaser.Scene {
             } else {
                 monster.setFlipX(false);
             }
+        }
+        if (distanceToPlayer < distanceToBaby) {
+            moveTowardsSprite(this.player);
+        } else if (distanceToBaby <= distanceToPlayer) {
+            moveTowardsSprite(this.baby);
         } else {
             monster.setVelocity(0);
         }
