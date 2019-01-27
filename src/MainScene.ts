@@ -16,6 +16,8 @@ export default class MainScene extends Phaser.Scene {
     hungerBar: Phaser.GameObjects.Graphics;
     floorLayer: Phaser.Tilemaps.StaticTilemapLayer;
     skyAndDuneLayer: Phaser.Tilemaps.StaticTilemapLayer;
+    home: Phaser.GameObjects.Graphics;
+    goal: Phaser.GameObjects.Graphics;
 
     constructor() {
         super({
@@ -40,6 +42,7 @@ export default class MainScene extends Phaser.Scene {
         );
         this.load.image('computer', 'computer.png');
         this.load.image('particle', 'particle.png');
+        this.load.image('rain-particle', 'rainparticle.jpg');
         this.load.image('background', 'background.png');
     }
 
@@ -66,6 +69,12 @@ export default class MainScene extends Phaser.Scene {
         this.obstacleLayer = obstacleTilemap.createStaticLayer(0, obstacleTileset, 0, 0);
         this.obstacleLayer.setCollisionByExclusion([-1], true);
         this.obstacleLayer.setDepth(1);
+
+        // Home
+        this.home = this.add.graphics(); 
+        this.home.fillStyle(0x000000);
+        this.home.setDepth(1);
+        this.home.fillRect(200, 500, 100, 100);
 
         // const desertTileset = desertTilemap.addTilesetImage(null, 'tiles', 16, 16, 1, 2);
         // this.obstacleLayer = desertTilemap.createStaticLayer(0, desertTileset, 0, 0);
@@ -124,9 +133,18 @@ export default class MainScene extends Phaser.Scene {
         // const computer = this.add.image(400, 300, 'computer');
         const particles = this.add.particles('particle').setDepth(30);
         const emitter = particles.createEmitter({
-            speed: 50,
-            scale: { start: 0.2, end: 0 },
+            speedY: 700,
+            scaleX: 0.1,
+            scaleY: 0.1,
+            timeScale: 0.08,
             blendMode: Phaser.BlendModes.ADD,
+            emitZone: {
+                source: new Phaser.Geom.Line(-100, 0, 1400, 0),
+            },
+            maxParticles: 0,
+            quantity: 0.4,
+            lifespan: 30000,
+            alpha: 0.8,
         });
         // emitter.startFollow(this.player);
         const camera = this.cameras.main;
