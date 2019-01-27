@@ -84,6 +84,12 @@ export default class MainScene extends Phaser.Scene {
         this.baby.setDepth(2);
         this.baby.fillRect(210, 510, 10, 10);
 
+        // Goal
+        this.goal = this.add.graphics(); 
+        this.goal.fillStyle(0x00ffff);
+        this.goal.setDepth(1);
+        this.goal.fillRect(700, 500, 100, 100);
+
         // const desertTileset = desertTilemap.addTilesetImage(null, 'tiles', 16, 16, 1, 2);
         // this.obstacleLayer = desertTilemap.createStaticLayer(0, desertTileset, 0, 0);
         // const wallsLayer = wallsTilemap.createStaticLayer(0, wallsTileset, 0, 0);
