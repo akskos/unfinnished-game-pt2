@@ -2,6 +2,7 @@ import _ from 'lodash';
 import Phaser from 'phaser';
 import MainScene from './MainScene';
 import MenuScene from './MenuScene';
+import IndicatorScene from './IndicatorScene';
 
 class TestGame extends Phaser.Game {
     constructor() {
@@ -18,6 +19,7 @@ class TestGame extends Phaser.Game {
             scene: [
                 MenuScene,
                 MainScene,
+                IndicatorScene,
             ],
         });
     }

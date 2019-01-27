@@ -7,12 +7,15 @@ export default class MainScene extends Phaser.Scene {
     playerHealth = 5;
     isPlayerFlipped = false;
     cursors: Phaser.Input.Keyboard.CursorKeys;
-    rect: Phaser.GameObjects.Graphics;
     rectWidth = 100;
     computerIcon: Phaser.Physics.Arcade.Sprite;
     monsters: Phaser.Physics.Arcade.Sprite[] = [];
-    obstacleLayer: any;
+    obstacleLayer: Phaser.Tilemaps.StaticTilemapLayer;
     gunCooldown = 0;
+    hunger = 100000;
+    hungerBar: Phaser.GameObjects.Graphics;
+    floorLayer: Phaser.Tilemaps.StaticTilemapLayer;
+    skyAndDuneLayer: Phaser.Tilemaps.StaticTilemapLayer;
 
     constructor() {
         super({
@@ -22,9 +25,11 @@ export default class MainScene extends Phaser.Scene {
 
     preload() {
         this.load.setBaseURL('assets/');
-        this.load.image('tiles', 'forest_tiles_extruded.png');
-        this.load.tilemapCSV('map', 'forest_tilemap.csv');
-        this.load.tilemapCSV('backgroundMap', 'forest_tilemap_background.csv');
+        this.load.image('desert-tiles', 'desert-tileset.png');
+        this.load.image('walls-tiles', 'walls-tileset.png');
+        this.load.tilemapCSV('floor-tilemap', 'floor-tilemap.csv');
+        this.load.tilemapCSV('sky-and-dune-tilemap', 'sky-and-dune-tilemap.csv');
+        this.load.tilemapCSV('obstacle-tilemap', 'obstacle-tilemap.csv');
         this.load.spritesheet('player',
             'dude.png',
             { frameWidth: 18, frameHeight: 25 },
@@ -40,14 +45,28 @@ export default class MainScene extends Phaser.Scene {
 
     create() {
         this.cursors = this.input.keyboard.createCursorKeys();
-        const map = this.make.tilemap({ key: 'map', tileWidth: 16, tileHeight: 16 });
-        const backgroundMap = this.make.tilemap({ key: 'backgroundMap', tileWidth: 16, tileHeight: 16 });
-        const tileset = map.addTilesetImage(null, 'tiles', 16, 16, 1, 2);
-        this.obstacleLayer = map.createStaticLayer(0, tileset, 0, 0);
-        const backgroundLayer = backgroundMap.createStaticLayer(0, tileset, 0, 0);
-        backgroundLayer.setDepth(-1);
-        this.obstacleLayer.setCollisionByExclusion([-1], true);
-        this.obstacleLayer.setDepth(1);
+
+        // Floor layer
+        const floorTilemap = this.make.tilemap({ key: 'floor-tilemap', tileWidth: 32, tileHeight: 32 });
+        const floorTileset = floorTilemap.addTilesetImage(null, 'desert-tiles'); // TODO: EXTRUDE
+        this.floorLayer = floorTilemap.createStaticLayer(0, floorTileset, 0, 0);
+
+        // Sky and dune layer
+        const skyAndDuneTilemap = this.make.tilemap({ key: 'sky-and-dune-tilemap', tileWidth: 32, tileHeight: 32 });
+        const skyAndDuneTileset = floorTilemap.addTilesetImage(null, 'desert-tiles'); // TODO: EXTRUDE
+        this.skyAndDuneLayer = skyAndDuneTilemap.createStaticLayer(0, skyAndDuneTileset, 0, 0);
+
+        // Obstacle layer
+        const obstacleTilemap = this.make.tilemap({ key: 'obstacle-tilemap', tileWidth: 32, tileHeight: 32 });
+        const obstacleTileset = obstacleTilemap.addTilesetImage(null, 'walls-tiles'); // TODO: EXTRUDE
+        this.obstacleLayer = obstacleTilemap.createStaticLayer(0, obstacleTileset, 0, 0);
+
+        // const desertTileset = desertTilemap.addTilesetImage(null, 'tiles', 16, 16, 1, 2);
+        // this.obstacleLayer = desertTilemap.createStaticLayer(0, desertTileset, 0, 0);
+        // const wallsLayer = wallsTilemap.createStaticLayer(0, wallsTileset, 0, 0);
+        // backgroundLayer.setDepth(-1);
+        // this.obstacleLayer.setCollisionByExclusion([-1], true);
+        // this.obstacleLayer.setDepth(1);
         // const group = this.physics.add.staticGroup();
         this.player = this.physics.add.sprite(200, 300, 'player').setScale(2);
         this.player.setDepth(1);
@@ -118,9 +137,6 @@ export default class MainScene extends Phaser.Scene {
         const camera = this.cameras.main;
         camera.startFollow(this.player);
 
-        this.rect = this.add.graphics();
-        this.physics.add.collider(this.player, this.rect);
-            
         this.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' }).setDepth(199);
     }
 
