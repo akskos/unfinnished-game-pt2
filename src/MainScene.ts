@@ -17,9 +17,10 @@ export default class MainScene extends Phaser.Scene {
     floorLayer: Phaser.Tilemaps.StaticTilemapLayer;
     skyAndDuneLayer: Phaser.Tilemaps.StaticTilemapLayer;
     home: Phaser.GameObjects.Graphics;
+    baby: Phaser.Physics.Arcade.Sprite;
     goal: Phaser.GameObjects.Graphics;
-    baby: Phaser.GameObjects.Graphics;
     rain: Phaser.GameObjects.Particles.ParticleEmitter;
+    babyPickedUp: boolean;
 
     constructor() {
         super({
@@ -46,6 +47,14 @@ export default class MainScene extends Phaser.Scene {
         this.load.image('particle', 'particle.png');
         this.load.image('rain-particle', 'rainparticle.jpg');
         this.load.image('background', 'background.png');
+        this.load.spritesheet('baby',
+            'baby.png',
+            { frameWidth: 38, frameHeight: 51 },
+        );
+        this.load.spritesheet('man-with-baby',
+            'man-with-baby.png',
+            { frameWidth: 49, frameHeight: 118 },
+        );
     }
 
     create() {
@@ -79,10 +88,15 @@ export default class MainScene extends Phaser.Scene {
         this.home.fillRect(200, 500, 100, 100);
 
         // Baby
-        this.baby = this.add.graphics(); 
-        this.baby.fillStyle(0x00ff00);
+        this.baby = this.physics.add.sprite(110, 510, 'baby').setScale(0.9);
         this.baby.setDepth(2);
-        this.baby.fillRect(210, 510, 10, 10);
+        this.anims.create({
+            key: 'baby-idle',
+            frames: this.anims.generateFrameNumbers('baby', { start: 0, end: 3 }),
+            frameRate: 5,
+            repeat: -1,
+        });
+        this.baby.anims.play('baby-idle', true);
 
         // Goal
         this.goal = this.add.graphics(); 
@@ -98,7 +112,7 @@ export default class MainScene extends Phaser.Scene {
         // this.obstacleLayer.setDepth(1);
         // const group = this.physics.add.staticGroup();
         this.player = this.physics.add.sprite(200, 500, 'player').setScale(0.5);
-        this.player.setDepth(1);
+        this.player.setDepth(3);
         this.physics.add.collider(this.player, this.skyAndDuneLayer);
         this.physics.add.collider(this.player, this.obstacleLayer);
         this.anims.create({
@@ -113,7 +127,19 @@ export default class MainScene extends Phaser.Scene {
             frameRate: 11,
             repeat: -1,
         });
-        this.player.anims.play('idle', true);
+        this.anims.create({
+            key: 'man-with-baby-idle',
+            frames: this.anims.generateFrameNumbers('man-with-baby', { start: 0, end: 1 }),
+            frameRate: 5,
+            repeat: -1,
+        });
+        this.anims.create({
+            key: 'man-with-baby-walk',
+            frames: this.anims.generateFrameNumbers('man-with-baby', { frames: [0, 2, 1, 3] }),
+            frameRate: 11,
+            repeat: -1,
+        });
+        this.playPlayerIdleAnimation();
         this.monsters.push(this.physics.add.sprite(0, 300, 'monster').setDepth(1));
         this.anims.create({
             key: 'monster_idle',
@@ -155,7 +181,7 @@ export default class MainScene extends Phaser.Scene {
             maxParticles: 0,
             quantity: 0.4,
             lifespan: 30000,
-            alpha: 0.8,
+            alpha: 0.3,
             emitZone: {
                 source: new Phaser.Geom.Line(-100, 0, 1800, 0),
             }
@@ -165,6 +191,17 @@ export default class MainScene extends Phaser.Scene {
         camera.startFollow(this.player);
 
         this.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' }).setDepth(199);
+
+        this.input.keyboard.on('keyup_P', () => {
+            console.log('keyup_P');
+            if (this.calculateSpriteDistance(this.player, this.baby) < 100 && !this.babyPickedUp) {
+                this.babyPickedUp = true;
+                this.baby.setPosition(-10000, -10000);
+            } else if (this.babyPickedUp) {
+                this.babyPickedUp = false;
+                this.baby.setPosition(this.player.body.x, this.player.body.y);
+            }
+        });
     }
 
     update(time, delta) {
@@ -203,27 +240,27 @@ export default class MainScene extends Phaser.Scene {
         if (this.playerHealth > 0) {
             if (this.cursors.left.isDown) {
                 this.player.setVelocityX(-SPEED);
-                this.player.anims.play('walk', true);
+                this.playPlayerWalkingAnimation();
                 this.player.setFlipX(true);
                 this.isPlayerFlipped = true;
             }
             if (this.cursors.right.isDown) {
                 this.player.setVelocityX(SPEED);
-                this.player.anims.play('walk', true);
+                this.playPlayerWalkingAnimation();
                 this.player.setFlipX(false);
                 this.isPlayerFlipped = false;
             }
             if (this.cursors.up.isDown) {
                 this.player.setVelocityY(-SPEED);
-                this.player.anims.play('walk', true);
+                this.playPlayerWalkingAnimation();
             }
             if (this.cursors.down.isDown) {
                 this.player.setVelocityY(SPEED);
-                this.player.anims.play('walk', true);
+                this.playPlayerWalkingAnimation();
             }
             if (this.noCursorIsDown(this.cursors)) {
                 this.player.setVelocity(0);
-                this.player.anims.play('idle', true);
+                this.playPlayerIdleAnimation();
             }
             if (this.cursors.space.isDown && this.gunCooldown <= 0) {
                 this.gunCooldown = 500;
@@ -256,5 +293,29 @@ export default class MainScene extends Phaser.Scene {
 
     noCursorIsDown(cursors: Phaser.Input.Keyboard.CursorKeys) {
         return cursors.left.isUp && cursors.right.isUp && cursors.up.isUp && cursors.down.isUp;
+    }
+
+    calculateSpriteDistance(sprite1: Phaser.Physics.Arcade.Sprite, sprite2: Phaser.Physics.Arcade.Sprite) {
+        const body1 = sprite1.body;
+        const body2 = sprite2.body;
+        const xDistance = body1.x - body2.x;
+        const yDistance = body1.y - body2.y;
+        return Math.sqrt(Math.pow(xDistance, 2) + Math.pow(yDistance, 2));
+    }
+
+    playPlayerWalkingAnimation() {
+        if (this.babyPickedUp) {
+            this.player.anims.play('man-with-baby-walk', true);
+        } else {
+            this.player.anims.play('walk', true);
+        }
+    }
+
+    playPlayerIdleAnimation() {
+        if (this.babyPickedUp) {
+            this.player.anims.play('man-with-baby-idle', true);
+        } else {
+            this.player.anims.play('idle', true);
+        }
     }
 }
