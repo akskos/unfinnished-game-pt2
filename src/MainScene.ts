@@ -185,32 +185,13 @@ export default class MainScene extends Phaser.Scene {
         if (this.playerHealth === 0) {
             return;
         }
-        const xVelocity = this.player.body.x - this.monsters[0].body.x;
-        const yVelocity = this.player.body.y - this.monsters[0].body.y;
-        const distance = Math.sqrt(Math.pow(xVelocity, 2) + Math.pow(yVelocity, 2));
-        if (distance < 250) {
-            this.monsters[0].setVelocityX(xVelocity);
-            this.monsters[0].setVelocityY(yVelocity);
-            this.monsters[0].body.velocity.normalize().scale(100);
-            if (xVelocity < 0) {
-                this.monsters[0].setFlipX(true);
-            } else {
-                this.monsters[0].setFlipX(false);
-            }
-        } else {
-            this.monsters[0].setVelocity(0);
-        }
+        this.monsters.forEach(monster => {
+            this.updateMonster(monster);
+        });
 
         // icons
         const worldPoint = this.cameras.main.getWorldPoint(40, 40);
         this.computerIcon && this.computerIcon.setPosition(worldPoint.x, worldPoint.y);
-
-        // rect
-        // this.rect.clear();
-        // this.rect.setDepth(30);
-        // this.rect.lineStyle(2, 0xff00ff, 1);
-        // this.rectWidth += delta / 10;
-        // this.rect.strokeRect(100, 300, this.rectWidth, 60);
 
         // player movement
         if (this.playerHealth > 0) {
@@ -323,5 +304,22 @@ export default class MainScene extends Phaser.Scene {
         this.physics.add.collider(monster, this.baby);
         this.physics.add.collider(monster, this.obstacleLayer);
         return monster;
+    }
+
+    updateMonster(monster: Phaser.Physics.Arcade.Sprite) {
+        if (this.calculateSpriteDistance(this.player, monster) < 250) {
+            const xVelocity = this.player.body.x - monster.body.x;
+            const yVelocity = this.player.body.y - monster.body.y;
+            monster.setVelocityX(xVelocity);
+            monster.setVelocityY(yVelocity);
+            monster.body.velocity.normalize().scale(100);
+            if (xVelocity < 0) {
+                monster.setFlipX(true);
+            } else {
+                monster.setFlipX(false);
+            }
+        } else {
+            monster.setVelocity(0);
+        }
     }
 }
