@@ -18,6 +18,7 @@ export default class MainScene extends Phaser.Scene {
     skyAndDuneLayer: Phaser.Tilemaps.StaticTilemapLayer;
     home: Phaser.GameObjects.Graphics;
     goal: Phaser.GameObjects.Graphics;
+    baby: Phaser.GameObjects.Graphics;
 
     constructor() {
         super({
@@ -75,6 +76,12 @@ export default class MainScene extends Phaser.Scene {
         this.home.fillStyle(0x000000);
         this.home.setDepth(1);
         this.home.fillRect(200, 500, 100, 100);
+
+        // Baby
+        this.baby = this.add.graphics(); 
+        this.baby.fillStyle(0x00ff00);
+        this.baby.setDepth(2);
+        this.baby.fillRect(210, 510, 10, 10);
 
         // const desertTileset = desertTilemap.addTilesetImage(null, 'tiles', 16, 16, 1, 2);
         // this.obstacleLayer = desertTilemap.createStaticLayer(0, desertTileset, 0, 0);
